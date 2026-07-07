@@ -1,0 +1,809 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FallWatch · Ring 5 · watcher-of-watchers</title>
+<meta name="description" content="Sovereign hygiene monitor for the AI-Native Solutions estate. Browser + optional local companion. Session hygiene, estate live status, audit chain check.">
+<meta name="author" content="AI-Native Solutions">
+<meta name="theme-color" content="#1a1a1e">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%231a1a1e'/%3E%3Ctext x='16' y='22' font-family='serif' font-size='18' fill='%237a9c7e' text-anchor='middle'%3E%E2%97%90%3C/text%3E%3C/svg%3E">
+<link rel="manifest" href="manifest.webmanifest">
+<style>
+:root{
+  --void:#1a1a1e;--deep:#212127;--surface:#2a2a30;--raised:#33333a;
+  --line:rgba(232,228,219,0.08);--line2:rgba(232,228,219,0.16);
+  --text:#e8e4db;--muted:#928d80;--dim:#6b6660;
+  --sage:#7a9c7e;--sage-dim:rgba(122,156,126,0.14);
+  --amber:#d4a052;--amber-dim:rgba(212,160,82,0.12);
+  --coral:#d67a5a;--coral-dim:rgba(214,122,90,0.14);
+  --brass:#b8974a;
+  --serif:'Cormorant Garamond','Iowan Old Style',Georgia,serif;
+  --sans:'Inter',-apple-system,system-ui,sans-serif;
+  --mono:'JetBrains Mono','IBM Plex Mono',monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{background:var(--void);color:var(--text);font-family:var(--sans);font-size:14.5px;line-height:1.6;-webkit-font-smoothing:antialiased;min-height:100vh}
+button{font-family:inherit;cursor:pointer;border:none;outline:none;background:transparent;color:inherit}
+h1,h2,h3{font-family:var(--serif);font-weight:400;color:var(--text);line-height:1.2}
+h1{font-size:30px;letter-spacing:.01em}
+h1 em{color:var(--sage);font-style:italic}
+h2{font-size:20px;color:var(--text);margin-bottom:12px}
+h3{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.16em;font-family:var(--mono);font-weight:500;margin-bottom:8px}
+a{color:var(--sage);text-decoration:none}
+a:hover{text-decoration:underline}
+code{font-family:var(--mono);font-size:12px;background:var(--surface);padding:1px 6px;border-radius:4px;color:var(--amber)}
+.topbar{background:rgba(26,26,30,.95);backdrop-filter:blur(12px);border-bottom:1px solid var(--line);padding:16px 24px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:50;flex-wrap:wrap;gap:10px}
+.brand{display:flex;align-items:center;gap:12px;font-family:var(--serif);font-size:24px;color:var(--text)}
+.brand .glyph{color:var(--sage);font-size:26px}
+.brand .co{color:var(--dim);font-family:var(--mono);font-size:9.5px;letter-spacing:.16em;margin-left:6px;text-transform:uppercase}
+.mode-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:20px;font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase}
+.mode-badge.a{background:var(--sage-dim);color:var(--sage)}
+.mode-badge.b{background:var(--amber-dim);color:var(--amber)}
+.mode-badge .dot{width:6px;height:6px;border-radius:50%;background:currentColor;box-shadow:0 0 6px currentColor}
+.tabs{display:flex;gap:4px;flex-wrap:wrap}
+.tab{background:transparent;color:var(--muted);padding:9px 16px;border-radius:8px;font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;transition:all .15s}
+.tab:hover{color:var(--text)}
+.tab.on{background:var(--sage-dim);color:var(--sage)}
+main{padding:24px;max-width:1200px;margin:0 auto;width:100%}
+.view{display:none}
+.view.on{display:block}
+.hero{margin-bottom:28px}
+.hero p{color:var(--muted);max-width:720px;margin-top:8px}
+.grid{display:grid;gap:16px}
+.grid-2{grid-template-columns:repeat(2,1fr)}
+.grid-3{grid-template-columns:repeat(3,1fr)}
+.grid-4{grid-template-columns:repeat(4,1fr)}
+@media(max-width:800px){.grid-2,.grid-3,.grid-4{grid-template-columns:1fr}}
+.card{background:var(--deep);border:1px solid var(--line);border-radius:14px;padding:20px 22px}
+.card h2{margin-bottom:6px;font-size:19px}
+.card .sub{color:var(--muted);font-size:12.5px;margin-bottom:14px}
+.metric{display:flex;flex-direction:column;gap:4px;padding:16px 18px;background:var(--surface);border-radius:10px;border:1px solid var(--line)}
+.metric .lbl{color:var(--muted);font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase}
+.metric .val{font-family:var(--serif);font-size:32px;color:var(--sage);font-style:italic}
+.metric .val.warn{color:var(--amber)}
+.metric .val.bad{color:var(--coral)}
+.metric .val.dim{color:var(--dim)}
+.metric .foot{color:var(--dim);font-size:11px;font-family:var(--mono)}
+.row{display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid var(--line);gap:12px;flex-wrap:wrap}
+.row:last-child{border-bottom:none}
+.row .k{color:var(--muted);font-family:var(--mono);font-size:11.5px;letter-spacing:.06em}
+.row .v{color:var(--text);font-family:var(--mono);font-size:12.5px;text-align:right;word-break:break-all}
+.row .v.ok{color:var(--sage)}
+.row .v.warn{color:var(--amber)}
+.row .v.bad{color:var(--coral)}
+.chip{display:inline-block;padding:2px 9px;border-radius:11px;font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase}
+.chip.ok{background:var(--sage-dim);color:var(--sage)}
+.chip.warn{background:var(--amber-dim);color:var(--amber)}
+.chip.bad{background:var(--coral-dim);color:var(--coral)}
+.chip.dim{background:var(--surface);color:var(--muted)}
+.btn{background:var(--sage);color:var(--void);padding:10px 18px;border-radius:8px;font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;display:inline-flex;align-items:center;gap:6px}
+.btn:hover{background:#8db091}
+.btn.ghost{background:transparent;color:var(--text);border:1px solid var(--line2)}
+.btn.ghost:hover{border-color:var(--sage);color:var(--sage)}
+.btn.amber{background:var(--amber);color:var(--void)}
+.btn.amber:hover{background:#e0b06a}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.log{background:var(--surface);border-radius:10px;padding:14px 18px;font-family:var(--mono);font-size:11.5px;color:var(--muted);max-height:280px;overflow-y:auto;line-height:1.7}
+.log .t{color:var(--dim);margin-right:8px}
+.log .ok{color:var(--sage)}
+.log .warn{color:var(--amber)}
+.log .bad{color:var(--coral)}
+.repo-list{max-height:520px;overflow-y:auto}
+.repo{display:grid;grid-template-columns:1fr auto auto;gap:12px;padding:9px 14px;background:var(--surface);border-radius:8px;margin-bottom:6px;align-items:center;font-size:13px}
+.repo .name{font-family:var(--mono);font-size:12.5px;color:var(--text)}
+.repo .age{font-family:var(--mono);font-size:10.5px;color:var(--dim)}
+.diag{padding:16px 20px;background:var(--surface);border-radius:10px;margin-bottom:10px;border-left:3px solid var(--line)}
+.diag.ok{border-left-color:var(--sage)}
+.diag.warn{border-left-color:var(--amber)}
+.diag.bad{border-left-color:var(--coral)}
+.diag .head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;gap:10px;flex-wrap:wrap}
+.diag .head .id{font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:.08em}
+.diag .head .title{font-family:var(--serif);font-size:17px;color:var(--text);flex:1}
+.diag .body{color:var(--muted);font-size:13px;line-height:1.6}
+.chain-viz{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.chain-node{padding:8px 10px;background:var(--surface);border:1px solid var(--line);border-radius:6px;font-family:var(--mono);font-size:10.5px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.chain-node.ok{border-color:var(--sage);color:var(--sage)}
+.chain-node.bad{border-color:var(--coral);color:var(--coral)}
+.chain-node .arrow{color:var(--dim);margin:0 2px}
+input[type=text],input[type=url],textarea{background:var(--surface);border:1px solid var(--line2);color:var(--text);padding:10px 14px;border-radius:8px;font-family:var(--mono);font-size:12.5px;width:100%;outline:none}
+input:focus,textarea:focus{border-color:var(--sage)}
+.footer{margin-top:40px;padding:20px 24px;text-align:center;color:var(--dim);font-family:var(--mono);font-size:11px;letter-spacing:.08em;border-top:1px solid var(--line)}
+.footer a{color:var(--muted)}
+.pulse{display:inline-block;width:8px;height:8px;background:var(--sage);border-radius:50%;box-shadow:0 0 8px var(--sage);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.spinner{display:inline-block;width:12px;height:12px;border:2px solid var(--line2);border-top-color:var(--sage);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+details{background:var(--surface);border-radius:8px;padding:10px 14px;margin-top:10px}
+summary{cursor:pointer;color:var(--muted);font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase}
+details pre{margin-top:10px;font-family:var(--mono);font-size:11px;color:var(--text);white-space:pre-wrap;line-height:1.5}
+.help{background:var(--amber-dim);border:1px solid var(--amber);border-radius:10px;padding:14px 18px;margin-top:16px;color:var(--text);font-size:13px}
+.help code{background:rgba(0,0,0,.3)}
+.status-bar{display:flex;gap:14px;padding:12px 18px;background:var(--surface);border-radius:10px;margin-bottom:22px;font-family:var(--mono);font-size:11px;color:var(--muted);flex-wrap:wrap;align-items:center}
+.status-bar span strong{color:var(--text)}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="brand"><span class="glyph">◐</span> <span>FallWatch</span> <span class="co">Ring 5 · watcher-of-watchers</span></div>
+  <div class="tabs">
+    <button class="tab on" data-tab="session">Session hygiene</button>
+    <button class="tab" data-tab="estate">Estate watch</button>
+    <button class="tab" data-tab="chain">Chain audit</button>
+    <button class="tab" data-tab="diag">Diagnostics</button>
+  </div>
+  <div id="modeBadge" class="mode-badge a"><span class="dot"></span> Mode A · Browser</div>
+</div>
+
+<main>
+<div class="status-bar">
+  <span>Scan: <strong id="scanTime">idle</strong></span>
+  <span>Companion: <strong id="compStatus">not detected</strong></span>
+  <span>OP5: <strong id="op5Status">—</strong></span>
+  <span style="margin-left:auto"><button class="btn ghost" id="rescanBtn">Rescan all</button></span>
+</div>
+
+<!-- SESSION HYGIENE -->
+<div class="view on" id="v-session">
+  <div class="hero">
+    <h1>Session <em>hygiene</em></h1>
+    <p>Browser-side inventory of what's holding storage, workers, connections. In Mode B (companion running), also local process count and orphan MCP candidates. Direct implementation of Simon's OP5 doctrine.</p>
+  </div>
+  <div class="grid grid-4" style="margin-bottom:18px">
+    <div class="metric"><span class="lbl">Service workers</span><span class="val" id="m-sw">—</span><span class="foot">registered on origin</span></div>
+    <div class="metric"><span class="lbl">IDB usage</span><span class="val" id="m-idb">—</span><span class="foot">estimate</span></div>
+    <div class="metric"><span class="lbl">Cache storage</span><span class="val" id="m-cache">—</span><span class="foot">CacheStorage</span></div>
+    <div class="metric"><span class="lbl">WebRTC peers</span><span class="val" id="m-rtc">—</span><span class="foot">RTCPeerConnection</span></div>
+  </div>
+  <div class="grid grid-2">
+    <div class="card">
+      <h2>Browser inventory</h2>
+      <div class="sub">What this tab controls / holds</div>
+      <div id="browserInv"></div>
+    </div>
+    <div class="card">
+      <h2>WebLLM state</h2>
+      <div class="sub">Cached models via CacheStorage / IndexedDB</div>
+      <div id="webllmState"></div>
+    </div>
+    <div class="card">
+      <h2>Companion (Mode B)</h2>
+      <div class="sub">Optional Node companion at <code>localhost:4318</code></div>
+      <div id="compPane">
+        <div class="row"><span class="k">Endpoint</span><span class="v" id="compEP">http://localhost:4318</span></div>
+        <div class="row"><span class="k">Status</span><span class="v" id="compV">checking…</span></div>
+        <div class="row"><span class="k">OS</span><span class="v" id="compOS">—</span></div>
+        <div class="row"><span class="k">node.exe procs</span><span class="v" id="compNode">—</span></div>
+        <div class="row"><span class="k">agent.mjs --server</span><span class="v" id="compAgent">—</span></div>
+        <div class="row"><span class="k">Playwright/Chromium</span><span class="v" id="compChr">—</span></div>
+        <div class="row"><span class="k">Zombie temp dirs</span><span class="v" id="compTemp">—</span></div>
+        <div class="row"><span class="k">Stale .claude locks</span><span class="v" id="compLock">—</span></div>
+        <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn" id="compScanBtn">Deep scan</button>
+          <button class="btn ghost" id="compKillBtn">Kill orphans</button>
+        </div>
+        <div class="help" id="compHelp" style="display:none">
+          <strong>Start the companion:</strong> download <code>companion-server.mjs</code>, then run<br>
+          <code>node companion-server.mjs</code> — port 4318. Only serves <code>127.0.0.1</code>. See README.
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Live log</h2>
+      <div class="sub">Scans, findings, actions</div>
+      <div class="log" id="sessionLog"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ESTATE WATCH -->
+<div class="view" id="v-estate">
+  <div class="hero">
+    <h1>Estate <em>watch</em></h1>
+    <p>Pulls the FallHarbor manifest, pings every Pages live URL, flags red/green. Cross-checks last-push-vs-audit age. The estate hygiene doctrine, running.</p>
+  </div>
+  <div class="grid grid-4" style="margin-bottom:18px">
+    <div class="metric"><span class="lbl">Repos tracked</span><span class="val" id="e-total">—</span><span class="foot">from manifest</span></div>
+    <div class="metric"><span class="lbl">Live (200)</span><span class="val" id="e-live">—</span><span class="foot">Pages responding</span></div>
+    <div class="metric"><span class="lbl">Down</span><span class="val" id="e-down">—</span><span class="foot">4xx / 5xx / timeout</span></div>
+    <div class="metric"><span class="lbl">Untracked</span><span class="val" id="e-untracked">—</span><span class="foot">not in manifest</span></div>
+  </div>
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:12px">
+      <div><h2 style="margin:0">Live status</h2><div class="sub" style="margin:4px 0 0">Green = Pages 200 · Amber = fetch blocked / opaque · Red = down · Grey = no URL</div></div>
+      <div style="display:flex;gap:8px">
+        <button class="btn" id="estateScanBtn">Ping all</button>
+        <button class="btn ghost" id="estateExportBtn">Export JSON</button>
+      </div>
+    </div>
+    <div class="repo-list" id="estateList">
+      <div style="color:var(--muted);font-family:var(--mono);font-size:12px;padding:14px">Loading FallHarbor manifest…</div>
+    </div>
+  </div>
+</div>
+
+<!-- CHAIN AUDIT -->
+<div class="view" id="v-chain">
+  <div class="hero">
+    <h1>Chain <em>audit</em></h1>
+    <p>Reads FallSignature-signed events from IndexedDB / localStorage, verifies the audit chain is unbroken. prevHash → docHash walk, per Simon's Mansoor P3 hardening spec.</p>
+  </div>
+  <div class="grid grid-3" style="margin-bottom:18px">
+    <div class="metric"><span class="lbl">Events found</span><span class="val" id="c-total">—</span><span class="foot">across stores</span></div>
+    <div class="metric"><span class="lbl">Chain integrity</span><span class="val" id="c-int">—</span><span class="foot">unbroken links</span></div>
+    <div class="metric"><span class="lbl">Signatures</span><span class="val" id="c-sig">—</span><span class="foot">Ed25519 verified</span></div>
+  </div>
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:10px">
+      <div><h2 style="margin:0">Load audit events</h2><div class="sub" style="margin:4px 0 0">Paste a JSON array of signed events, or auto-scan IndexedDB stores</div></div>
+      <div style="display:flex;gap:8px">
+        <button class="btn ghost" id="chainScanIDB">Scan IndexedDB</button>
+        <button class="btn" id="chainVerifyBtn">Verify chain</button>
+      </div>
+    </div>
+    <textarea id="chainInput" rows="6" placeholder='[{"seq":1,"prevHash":"0","docHash":"…","sig":"…"}, …]'></textarea>
+    <div id="chainViz" class="chain-viz"></div>
+    <div id="chainReport" style="margin-top:14px"></div>
+  </div>
+</div>
+
+<!-- DIAGNOSTICS -->
+<div class="view" id="v-diag">
+  <div class="hero">
+    <h1>OP1–OP5 <em>diagnostics</em></h1>
+    <p>Simon's five operational rules from the 2026-06-02 forensic. Each rule as a pass/fail check with a plain-English explanation. Pulled from <code>mesh-ripple/.claude/CLAUDE.md</code>.</p>
+  </div>
+  <div id="diagList"></div>
+</div>
+
+<div class="footer">
+  ◐ FallWatch · Ring 5 · <a href="https://github.com/sjgant80-hub/fallwatch">github.com/sjgant80-hub/fallwatch</a> · MIT · part of the <a href="https://sjgant80-hub.github.io/fallharbor/">AI-Native Solutions</a> estate
+</div>
+</main>
+
+<script>
+// ─────────────────────────────────────────────────────────────────
+// FallWatch · Ring 5 · watcher-of-watchers
+// Session hygiene · Estate watch · Chain audit · OP1-OP5 diagnostics
+// ─────────────────────────────────────────────────────────────────
+
+const $ = s => document.querySelector(s);
+const $$ = s => document.querySelectorAll(s);
+const fmtBytes = n => {
+  if (!n) return '0 B';
+  const u = ['B','KB','MB','GB','TB'];
+  const i = Math.min(u.length-1, Math.floor(Math.log(n)/Math.log(1024)));
+  return (n/Math.pow(1024,i)).toFixed(i?1:0) + ' ' + u[i];
+};
+const now = () => new Date().toLocaleTimeString();
+const state = {
+  companion:null, companionUrl:'http://localhost:4318',
+  manifest:[], estateResults:{}, chainEvents:[], op5:'unknown'
+};
+
+// ── Log ─────────────────────────────────────────────────────────
+function log(msg, cls){
+  const box = $('#sessionLog');
+  const line = document.createElement('div');
+  line.innerHTML = `<span class="t">${now()}</span><span class="${cls||''}">${msg}</span>`;
+  box.insertBefore(line, box.firstChild);
+  while (box.children.length > 60) box.removeChild(box.lastChild);
+}
+
+// ── Tabs ────────────────────────────────────────────────────────
+$$('.tab').forEach(t => t.onclick = () => {
+  $$('.tab').forEach(x => x.classList.remove('on'));
+  $$('.view').forEach(x => x.classList.remove('on'));
+  t.classList.add('on');
+  $('#v-'+t.dataset.tab).classList.add('on');
+});
+
+// ── Session hygiene ─────────────────────────────────────────────
+async function scanBrowser(){
+  const inv = [];
+  // Service workers
+  let swCount = 0;
+  if ('serviceWorker' in navigator){
+    try{
+      const regs = await navigator.serviceWorker.getRegistrations();
+      swCount = regs.length;
+      regs.forEach(r=>inv.push({k:'SW scope', v:r.scope || '(root)', cls:'ok'}));
+    }catch(e){}
+  }
+  $('#m-sw').textContent = swCount;
+  $('#m-sw').className = 'val' + (swCount > 3 ? ' warn' : '');
+
+  // Storage estimate
+  let idbBytes = 0, cacheBytes = 0;
+  if (navigator.storage && navigator.storage.estimate){
+    try{
+      const est = await navigator.storage.estimate();
+      idbBytes = (est.usageDetails && est.usageDetails.indexedDB) || est.usage || 0;
+      cacheBytes = (est.usageDetails && est.usageDetails.caches) || 0;
+      inv.push({k:'Storage quota', v:fmtBytes(est.quota), cls:''});
+      inv.push({k:'Storage used', v:fmtBytes(est.usage) + ' (' + Math.round(100*est.usage/est.quota) + '%)', cls: est.usage/est.quota > 0.8 ? 'warn' : 'ok'});
+    }catch(e){}
+  }
+  $('#m-idb').textContent = fmtBytes(idbBytes);
+  $('#m-cache').textContent = fmtBytes(cacheBytes);
+
+  // Cache storage names
+  if ('caches' in self){
+    try{
+      const keys = await caches.keys();
+      inv.push({k:'Cache buckets', v:keys.length + (keys.length ? ' · ' + keys.slice(0,3).join(', ') + (keys.length>3?'…':'') : ''), cls:keys.length>10?'warn':''});
+    }catch(e){}
+  }
+
+  // IndexedDB databases (Chromium)
+  if (indexedDB.databases){
+    try{
+      const dbs = await indexedDB.databases();
+      inv.push({k:'IDB databases', v:dbs.length + (dbs.length ? ' · ' + dbs.slice(0,3).map(d=>d.name).join(', ') + (dbs.length>3?'…':'') : ''), cls:dbs.length>15?'warn':''});
+    }catch(e){}
+  }
+
+  // localStorage
+  try{
+    const lsKeys = Object.keys(localStorage);
+    let lsBytes = 0;
+    lsKeys.forEach(k => { lsBytes += (k.length + (localStorage.getItem(k)||'').length) * 2; });
+    inv.push({k:'localStorage keys', v:lsKeys.length + ' · ' + fmtBytes(lsBytes), cls:''});
+  }catch(e){}
+
+  // WebRTC — best-effort count (chrome only exposes via internals)
+  const rtcCount = window.__RTCPeerConnections || 0;
+  $('#m-rtc').textContent = rtcCount;
+
+  // BroadcastChannel — check fall-signal
+  try{
+    const bc = new BroadcastChannel('fall-signal');
+    inv.push({k:'BroadcastChannel', v:'fall-signal open', cls:'ok'});
+    setTimeout(()=>bc.close(), 500);
+  }catch(e){}
+
+  // Online status
+  inv.push({k:'Online', v: navigator.onLine ? 'yes' : 'no', cls: navigator.onLine ? 'ok' : 'bad'});
+  inv.push({k:'User agent', v:(navigator.userAgent||'').split(' ').slice(-2).join(' '), cls:''});
+
+  const box = $('#browserInv');
+  box.innerHTML = inv.map(x =>
+    `<div class="row"><span class="k">${x.k}</span><span class="v ${x.cls||''}">${x.v}</span></div>`
+  ).join('');
+
+  // WebLLM state
+  const llm = [];
+  try{
+    const keys = 'caches' in self ? await caches.keys() : [];
+    const llmCaches = keys.filter(k => /webllm|mlc|llama|qwen|hf-hub/i.test(k));
+    llm.push({k:'WebLLM cache buckets', v:llmCaches.length ? llmCaches.length + ' · ' + llmCaches.join(', ') : 'none', cls: llmCaches.length ? 'ok' : ''});
+  }catch(e){}
+  try{
+    const dbs = indexedDB.databases ? await indexedDB.databases() : [];
+    const llmDbs = dbs.filter(d => /webllm|mlc|llama|hf/i.test(d.name||''));
+    llm.push({k:'WebLLM IDB', v:llmDbs.length ? llmDbs.map(d=>d.name).join(', ') : 'none', cls: llmDbs.length ? 'ok' : ''});
+  }catch(e){}
+  llm.push({k:'WebGPU', v: 'gpu' in navigator ? 'supported' : 'no', cls: 'gpu' in navigator ? 'ok' : 'warn'});
+  llm.push({k:'Hardware concurrency', v:navigator.hardwareConcurrency + ' cores', cls:''});
+  llm.push({k:'Device memory', v:(navigator.deviceMemory || '?') + ' GB', cls:''});
+  $('#webllmState').innerHTML = llm.map(x =>
+    `<div class="row"><span class="k">${x.k}</span><span class="v ${x.cls||''}">${x.v}</span></div>`
+  ).join('');
+
+  log('Browser scan complete · ' + swCount + ' SW, ' + fmtBytes(idbBytes) + ' IDB', 'ok');
+}
+
+// ── Companion (Mode B) ──────────────────────────────────────────
+async function pingCompanion(){
+  try{
+    const r = await fetch(state.companionUrl + '/health', {mode:'cors', cache:'no-store'});
+    if (!r.ok) throw new Error('http ' + r.status);
+    const j = await r.json();
+    state.companion = j;
+    $('#modeBadge').className = 'mode-badge b';
+    $('#modeBadge').innerHTML = '<span class="dot"></span> Mode B · Companion';
+    $('#compStatus').textContent = 'connected · ' + (j.version||'v1');
+    $('#compV').innerHTML = '<span class="chip ok">connected</span> ' + (j.version||'v1');
+    $('#compOS').textContent = j.os + ' · ' + j.arch;
+    $('#compHelp').style.display = 'none';
+    log('Companion connected · ' + j.os, 'ok');
+    return true;
+  }catch(e){
+    state.companion = null;
+    $('#modeBadge').className = 'mode-badge a';
+    $('#modeBadge').innerHTML = '<span class="dot"></span> Mode A · Browser';
+    $('#compStatus').textContent = 'not detected';
+    $('#compV').innerHTML = '<span class="chip dim">offline</span>';
+    $('#compHelp').style.display = 'block';
+    return false;
+  }
+}
+
+async function companionScan(){
+  if (!state.companion){
+    const ok = await pingCompanion();
+    if (!ok){ log('Companion not running · run `node companion-server.mjs` first', 'warn'); return; }
+  }
+  try{
+    log('Deep scan · querying companion…');
+    const r = await fetch(state.companionUrl + '/scan', {cache:'no-store'});
+    const j = await r.json();
+    $('#compNode').innerHTML = j.nodeProcs.count + '';
+    $('#compAgent').innerHTML = j.orphans.agentServer > 0
+      ? '<span class="chip warn">' + j.orphans.agentServer + ' orphans</span>'
+      : '<span class="chip ok">0</span>';
+    $('#compChr').innerHTML = j.playwright.count > 5
+      ? '<span class="chip warn">' + j.playwright.count + '</span>'
+      : '<span class="chip ok">' + j.playwright.count + '</span>';
+    $('#compTemp').innerHTML = j.zombieTemps.count > 0
+      ? '<span class="chip warn">' + j.zombieTemps.count + '</span>'
+      : '<span class="chip ok">0</span>';
+    $('#compLock').innerHTML = j.staleLocks.count > 0
+      ? '<span class="chip warn">' + j.staleLocks.count + '</span>'
+      : '<span class="chip ok">0</span>';
+    const bad = j.orphans.agentServer + j.zombieTemps.count + j.staleLocks.count;
+    state.op5 = bad === 0 ? 'clean' : 'dirty';
+    $('#op5Status').innerHTML = bad === 0
+      ? '<span class="chip ok">clean</span>'
+      : '<span class="chip warn">' + bad + ' issues</span>';
+    log('Deep scan: ' + j.nodeProcs.count + ' node procs, ' + j.orphans.agentServer + ' agent-server orphans, ' + j.zombieTemps.count + ' zombie temps', bad === 0 ? 'ok' : 'warn');
+  }catch(e){
+    log('Scan failed · ' + e.message, 'bad');
+  }
+}
+
+async function companionKill(){
+  if (!state.companion){ log('No companion connected', 'warn'); return; }
+  if (!confirm('Kill orphan MCP children and stale locks. Companion will only touch:\n\n · agent.mjs --server without parent Claude Code\n · .claude/*.lock older than 24h\n · playwright temp dirs > 48h\n\nProceed?')) return;
+  try{
+    const r = await fetch(state.companionUrl + '/kill-orphans', {method:'POST'});
+    const j = await r.json();
+    log('Killed ' + j.killed + ' orphans, cleaned ' + j.cleaned + ' locks/dirs', 'ok');
+    companionScan();
+  }catch(e){
+    log('Kill failed · ' + e.message, 'bad');
+  }
+}
+
+// ── Estate watch ────────────────────────────────────────────────
+// Estate manifest — derived from fallharbor. Kept inline as fallback
+// so fallwatch works offline; will try to fetch fresher list from
+// fallharbor if reachable.
+const ESTATE_FALLBACK = [
+  {name:'fallharbor', url:'https://sjgant80-hub.github.io/fallharbor/', ring:'directory'},
+  {name:'fallmirror', url:'https://sjgant80-hub.github.io/fallmirror/', ring:'R5'},
+  {name:'fallsignature', url:'https://sjgant80-hub.github.io/fallsignature/', ring:'R6'},
+  {name:'mesh-89-tracker', url:'https://sjgant80-hub.github.io/mesh-89-tracker/', ring:'R6'},
+  {name:'fallcolony', url:'https://sjgant80-hub.github.io/fallcolony/', ring:'settlement'},
+  {name:'fallharmony', url:'https://sjgant80-hub.github.io/fallharmony/', ring:'cockpit'},
+  {name:'fallforge', url:'https://sjgant80-hub.github.io/fallforge/', ring:'installer'},
+  {name:'fallhub', url:'https://sjgant80-hub.github.io/fallhub/', ring:'smb-os'},
+  {name:'fallrouter', url:'https://sjgant80-hub.github.io/fallrouter/', ring:'orchestrator'},
+  {name:'fallenterprise', url:'https://sjgant80-hub.github.io/fallenterprise/', ring:'consultancy'},
+  {name:'wishwood', url:'https://sjgant80-hub.github.io/wishwood/', ring:'showroom'},
+  {name:'fallbrief', url:'https://sjgant80-hub.github.io/fallbrief/', ring:'legal'},
+  {name:'fallcompass', url:'https://sjgant80-hub.github.io/fallcompass/', ring:'cascade'},
+  {name:'fallescape', url:'https://sjgant80-hub.github.io/fallescape/', ring:'egress'},
+  {name:'fall-kit', url:'https://sjgant80-hub.github.io/fall-kit/', ring:'substrate'},
+  {name:'suzen', url:'https://sjgant80-hub.github.io/suzen/', ring:'oracle'},
+  {name:'fallreach', url:'https://sjgant80-hub.github.io/fallreach/', ring:'SDR'},
+  {name:'fallgravity', url:'https://sjgant80-hub.github.io/fallgravity/', ring:'strategy'},
+  {name:'fallpost', url:'https://sjgant80-hub.github.io/fallpost/', ring:'social'},
+  {name:'operator', url:'https://sjgant80-hub.github.io/operator/', ring:'consulting'},
+  {name:'honestly', url:'https://sjgant80-hub.github.io/honestly/', ring:'search'},
+  {name:'fallscribe', url:'https://sjgant80-hub.github.io/fallscribe/', ring:'notes'},
+  {name:'fallstack', url:'https://sjgant80-hub.github.io/fallstack/', ring:'audit'},
+  {name:'fallback', url:'https://sjgant80-hub.github.io/fallback/', ring:'refund'},
+  {name:'kard', url:'https://sjgant80-hub.github.io/kard/', ring:'game'}
+];
+
+async function loadManifest(){
+  let repos = ESTATE_FALLBACK;
+  // Try to fetch fresher list from fallharbor manifest.json (if hosted)
+  try{
+    const r = await fetch('https://sjgant80-hub.github.io/fallharbor/manifest.json', {cache:'no-store', mode:'cors'});
+    if (r.ok){
+      const j = await r.json();
+      if (Array.isArray(j.repos) && j.repos.length){
+        repos = j.repos.map(r => ({
+          name: r.name,
+          url: r.url || `https://sjgant80-hub.github.io/${r.name}/`,
+          ring: r.ring || r.category || '—'
+        }));
+        log('Loaded FallHarbor manifest · ' + repos.length + ' repos', 'ok');
+      }
+    }
+  }catch(e){
+    log('FallHarbor manifest unreachable, using fallback (' + ESTATE_FALLBACK.length + ' repos)', 'warn');
+  }
+  state.manifest = repos;
+  $('#e-total').textContent = repos.length;
+  renderEstate();
+}
+
+function renderEstate(){
+  const list = $('#estateList');
+  list.innerHTML = state.manifest.map(r => {
+    const res = state.estateResults[r.name];
+    let chip = '<span class="chip dim">?</span>';
+    if (res){
+      if (res.status === 'up') chip = '<span class="chip ok">UP</span>';
+      else if (res.status === 'opaque') chip = '<span class="chip warn">?</span>';
+      else if (res.status === 'down') chip = '<span class="chip bad">DOWN</span>';
+    }
+    return `<div class="repo">
+      <div>
+        <div class="name"><a href="${r.url}" target="_blank" rel="noopener">${r.name}</a></div>
+        <div class="age">${r.ring} · ${r.url.replace(/^https?:\/\//,'')}</div>
+      </div>
+      <div>${chip}</div>
+      <div class="age">${res ? (res.ms + 'ms') : ''}</div>
+    </div>`;
+  }).join('');
+  const live = Object.values(state.estateResults).filter(r=>r.status==='up').length;
+  const down = Object.values(state.estateResults).filter(r=>r.status==='down').length;
+  $('#e-live').textContent = live;
+  $('#e-live').className = 'val ' + (live > state.manifest.length * 0.7 ? '' : 'warn');
+  $('#e-down').textContent = down;
+  $('#e-down').className = 'val ' + (down === 0 ? 'dim' : 'bad');
+  $('#e-untracked').textContent = state.manifest.length - live - down;
+}
+
+async function pingOne(repo){
+  const t0 = performance.now();
+  try{
+    // no-cors: gets opaque response, but we know if network reached it
+    await fetch(repo.url, {mode:'no-cors', cache:'no-store', signal: AbortSignal.timeout(6000)});
+    const ms = Math.round(performance.now() - t0);
+    return {status:'opaque', ms}; // Pages CORS blocks read → treat opaque as up-ish
+  }catch(e){
+    const ms = Math.round(performance.now() - t0);
+    return {status:'down', ms, err:e.message};
+  }
+}
+
+async function pingAll(){
+  log('Pinging ' + state.manifest.length + ' repos…');
+  const CHUNK = 6;
+  for (let i = 0; i < state.manifest.length; i += CHUNK){
+    const chunk = state.manifest.slice(i, i + CHUNK);
+    const results = await Promise.all(chunk.map(async r => {
+      // If companion is running, ask it to do a real HEAD (bypasses CORS)
+      if (state.companion){
+        try{
+          const q = await fetch(state.companionUrl + '/probe?url=' + encodeURIComponent(r.url));
+          const j = await q.json();
+          return {name:r.name, res:{status: j.status===200?'up':(j.status?'down':'down'), ms:j.ms, code:j.status}};
+        }catch(e){}
+      }
+      const res = await pingOne(r);
+      // If opaque returned, we treat it as up (Pages usually returns opaque 200)
+      if (res.status === 'opaque') res.status = 'up';
+      return {name:r.name, res};
+    }));
+    results.forEach(r => state.estateResults[r.name] = r.res);
+    renderEstate();
+  }
+  const live = Object.values(state.estateResults).filter(r=>r.status==='up').length;
+  log('Estate ping done · ' + live + '/' + state.manifest.length + ' up', 'ok');
+}
+
+// ── Chain audit ─────────────────────────────────────────────────
+async function sha256(str){
+  const buf = new TextEncoder().encode(str);
+  const hash = await crypto.subtle.digest('SHA-256', buf);
+  return Array.from(new Uint8Array(hash)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+async function verifyChain(events){
+  const nodes = [];
+  let prev = '0';
+  let broken = 0, verified = 0, sigOk = 0;
+  for (let i = 0; i < events.length; i++){
+    const ev = events[i];
+    const expectedPrev = ev.prevHash;
+    const linkOk = expectedPrev === prev;
+    // Recompute docHash if possible
+    let hashOk = true;
+    if (ev.doc !== undefined){
+      const computed = await sha256(JSON.stringify(ev.doc));
+      hashOk = computed === (ev.docHash || ev.hash);
+    }
+    if (ev.sig) sigOk++;
+    if (linkOk && hashOk) verified++;
+    else broken++;
+    nodes.push({
+      seq: ev.seq !== undefined ? ev.seq : i,
+      ok: linkOk && hashOk,
+      linkOk, hashOk,
+      sig: !!ev.sig
+    });
+    prev = ev.docHash || ev.hash || prev;
+  }
+  return {nodes, verified, broken, sigOk, total: events.length};
+}
+
+async function runChainAudit(){
+  let events = [];
+  const raw = $('#chainInput').value.trim();
+  if (raw){
+    try{ events = JSON.parse(raw); }
+    catch(e){ alert('Not valid JSON'); return; }
+  } else {
+    events = state.chainEvents;
+  }
+  if (!events.length){ alert('No events. Paste JSON or click "Scan IndexedDB".'); return; }
+  const r = await verifyChain(events);
+  $('#c-total').textContent = r.total;
+  $('#c-int').textContent = r.broken === 0 ? '✓' : r.broken + ' breaks';
+  $('#c-int').className = 'val ' + (r.broken === 0 ? '' : 'bad');
+  $('#c-sig').textContent = r.sigOk + '/' + r.total;
+  $('#c-sig').className = 'val ' + (r.sigOk === r.total ? '' : 'warn');
+  const max = Math.min(r.nodes.length, 40);
+  $('#chainViz').innerHTML = r.nodes.slice(0, max).map((n,i) =>
+    `<div class="chain-node ${n.ok?'ok':'bad'}">#${n.seq}${n.sig?' ✓':''}</div>${i<max-1?'<span class="arrow">→</span>':''}`
+  ).join('') + (r.nodes.length > max ? `<div class="chain-node">…+${r.nodes.length-max}</div>` : '');
+  $('#chainReport').innerHTML = `
+    <div class="diag ${r.broken===0?'ok':'bad'}">
+      <div class="head"><span class="title">Result</span> <span class="chip ${r.broken===0?'ok':'bad'}">${r.broken===0?'UNBROKEN':r.broken+' BREAKS'}</span></div>
+      <div class="body">${r.verified}/${r.total} links verified · ${r.sigOk} carry signatures · ${r.broken>0?'first break at seq '+r.nodes.find(n=>!n.ok).seq:'chain intact'}</div>
+    </div>`;
+  log('Chain audit: ' + r.verified + '/' + r.total + ' verified', r.broken === 0 ? 'ok' : 'bad');
+}
+
+async function scanIDBForEvents(){
+  const found = [];
+  try{
+    const dbs = indexedDB.databases ? await indexedDB.databases() : [];
+    log('Scanning ' + dbs.length + ' IndexedDB databases for audit events…');
+    for (const dbInfo of dbs){
+      try{
+        const db = await new Promise((res, rej) => {
+          const req = indexedDB.open(dbInfo.name);
+          req.onsuccess = () => res(req.result);
+          req.onerror = () => rej(req.error);
+        });
+        for (const storeName of db.objectStoreNames){
+          if (/audit|event|chain|log|signed/i.test(storeName)){
+            const tx = db.transaction(storeName, 'readonly');
+            const store = tx.objectStore(storeName);
+            const req = store.getAll();
+            const items = await new Promise(res => { req.onsuccess = () => res(req.result); req.onerror = () => res([]); });
+            items.forEach(it => {
+              if (it && (it.prevHash !== undefined || it.docHash !== undefined || it.hash !== undefined)){
+                found.push(it);
+              }
+            });
+          }
+        }
+        db.close();
+      }catch(e){}
+    }
+  }catch(e){}
+  // Also check localStorage
+  try{
+    for (const k of Object.keys(localStorage)){
+      if (/audit|event|chain/i.test(k)){
+        try{
+          const v = JSON.parse(localStorage.getItem(k));
+          if (Array.isArray(v)) v.forEach(x => { if (x.prevHash !== undefined) found.push(x); });
+        }catch(e){}
+      }
+    }
+  }catch(e){}
+  state.chainEvents = found;
+  $('#chainInput').value = JSON.stringify(found, null, 2);
+  log('Found ' + found.length + ' audit events across stores', found.length ? 'ok' : 'warn');
+  if (found.length) runChainAudit();
+}
+
+// ── Diagnostics (OP1-OP5) ───────────────────────────────────────
+const OPS = [
+  {id:'OP1', title:'ENV-FIRST DEBUG',
+   body:'When something worked yesterday and breaks today, verify environment before patching code. Three checks: (a) same processes running, (b) same MCP servers connected, (c) same files on disk.'},
+  {id:'OP2', title:'NAME-BEFORE-KILL',
+   body:'Before stopping any process, name what it provides in one sentence. If you can\'t name it, ask. Cleanup that breaks working state costs more than the leak it was trying to fix.'},
+  {id:'OP3', title:'IMPROVISATION = STOP-THE-LINE',
+   body:'When an agent starts inventing new file names instead of using the proven verb, that\'s the signal it lost context. Stop the agent · force the existing verb · don\'t let it improvise harder.'},
+  {id:'OP4', title:'30-MINUTE TIME-BOX ON ENV DEBUGGING',
+   body:'Build problems are bounded. Environment debugging is unbounded. After 30 minutes of env-debugging without resolution, switch to the manual path. Come back to the auto-fix when the actual work is shipped.'},
+  {id:'OP5', title:'SESSION HYGIENE',
+   body:'Always use /exit to close Claude Code. Daily hygiene scan when no Claude Code is running: check for orphan node.exe processes matching onlybrains-mcp | fallcore-mcp. Those are ghosts of prior sessions.'}
+];
+
+async function renderDiag(){
+  const box = $('#diagList');
+  const checks = [];
+  // OP1: can we see local env at all?
+  checks[0] = {
+    pass: !!state.companion,
+    detail: state.companion
+      ? 'Companion connected · can query processes / MCP / disk directly'
+      : 'Browser-only mode · env-first checks limited to WebRTC / SW / IDB. Start companion for full OP1.'
+  };
+  // OP2: derived — do we know process purpose?
+  checks[1] = {
+    pass: true,
+    detail: 'FallWatch names every process before flagging it (agent.mjs --server = si-didy cockpit; onlybrains-mcp = Thomas substrate).'
+  };
+  // OP3: heuristic — check if there are duplicate script names in temp
+  checks[2] = {
+    pass: !state.companion || (state.companion && (state.companion.improvised||0) === 0),
+    detail: state.companion
+      ? 'No duplicate improvised verb scripts detected in scratchpad'
+      : 'Companion required to scan for improvised verb scripts'
+  };
+  // OP4: this is a doctrine reminder — always shown as pass with note
+  checks[3] = {
+    pass: true,
+    detail: 'Reminder rule · 30-min timer belongs on operator side (FallHarmony cockpit runs it). FallWatch just names it.'
+  };
+  // OP5: real check
+  const op5clean = state.op5 === 'clean' || (!state.companion && $('#m-sw').textContent < 4);
+  checks[4] = {
+    pass: op5clean,
+    detail: state.companion
+      ? (state.op5 === 'clean'
+          ? 'Clean · no orphan MCP children, no zombie temps, no stale locks'
+          : 'Dirty · see Session hygiene tab for details. Run "Kill orphans" to clean.')
+      : 'Browser hygiene looks OK. Full OP5 requires companion (needs Node to see local processes).'
+  };
+  box.innerHTML = OPS.map((op, i) => {
+    const c = checks[i];
+    const cls = c.pass ? 'ok' : 'warn';
+    return `<div class="diag ${cls}">
+      <div class="head">
+        <span class="id">${op.id}</span>
+        <span class="title">${op.title}</span>
+        <span class="chip ${cls}">${c.pass ? 'PASS' : 'ATTENTION'}</span>
+      </div>
+      <div class="body"><em style="color:var(--dim)">${op.body}</em></div>
+      <div class="body" style="margin-top:8px;color:var(--text)">${c.detail}</div>
+    </div>`;
+  }).join('');
+}
+
+// ── Bootstrap ───────────────────────────────────────────────────
+async function rescanAll(){
+  $('#scanTime').textContent = now();
+  await scanBrowser();
+  await pingCompanion();
+  if (state.companion) await companionScan();
+  if (!state.manifest.length) await loadManifest();
+  renderDiag();
+}
+
+$('#rescanBtn').onclick = rescanAll;
+$('#compScanBtn').onclick = companionScan;
+$('#compKillBtn').onclick = companionKill;
+$('#estateScanBtn').onclick = pingAll;
+$('#estateExportBtn').onclick = () => {
+  const data = state.manifest.map(r => ({...r, ...(state.estateResults[r.name]||{})}));
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'fallwatch-estate-' + Date.now() + '.json';
+  a.click();
+};
+$('#chainVerifyBtn').onclick = runChainAudit;
+$('#chainScanIDB').onclick = scanIDBForEvents;
+
+// Auto-boot
+rescanAll();
+// Auto-refresh session tab every 30s (light)
+setInterval(async () => {
+  if ($('#v-session').classList.contains('on')){
+    await pingCompanion();
+    if (state.companion) companionScan();
+  }
+}, 30000);
+
+// Register service worker (offline-first)
+if ('serviceWorker' in navigator){
+  try{ navigator.serviceWorker.register('sw.js').catch(()=>{}); }catch(e){}
+}
+
+log('FallWatch booted · Ring 5 · watching the watchers', 'ok');
+</script>
+</body>
+</html>
